@@ -137,7 +137,7 @@ export const resetPassWord = async (req, res, next) => {
   }
   await User.findOneAndUpdate({ email: email }, { $unset: { forgetCode: 1 } });
 
-  user.password = bcryptjs.hashSync(password, 8);
+  user.password = bcryptjs.hashSync(password, process.env.SALT_ROUND);
   await user.save();
 
   const tokens = await Token.find({ user: user._id });
