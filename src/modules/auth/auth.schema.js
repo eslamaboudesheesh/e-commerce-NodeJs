@@ -36,5 +36,6 @@ export const resetPass = joi
     email: joi.string().required().email(),
     code: joi.string().length(5).required(),
     password: joi.string().required(),
+    confirmPassword: joi.string().valid(joi.ref("password")).required(),
   })
   .required();

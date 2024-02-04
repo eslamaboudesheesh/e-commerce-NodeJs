@@ -1,7 +1,7 @@
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
-import randomstring from "randomstring";
+import Randomstring from "randomstring";
 
 import { User } from "../../../DB/models/user.model.js";
 import sendEmail from "../../utils/sendEmail.js";
@@ -104,9 +104,9 @@ export const sendForgetCode = async (req, res, next) => {
 
   // generate code
 
-  const randomString = randomstring.generate({
+  const randomString = Randomstring.generate({
     length: 5,
-    charset: "numberic",
+    charset: "numeric",
   });
 
   //save code in deb
