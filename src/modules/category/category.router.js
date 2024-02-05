@@ -18,5 +18,22 @@ router.post(
   validation(categorySchema.addCategorySchema),
   asyncHandler(categoryController.addCategory)
 );
+router.patch(
+  "/:id",
+  isAuth,
+  isAuthorized("admin"),
+  multerUploadCloud().single("category"),
+  validation(categorySchema.updateCategorySchema),
+  asyncHandler(categoryController.updateCategory)
+);
 
+router.delete(
+  "/:id",
+  isAuth,
+  isAuthorized("admin"),
+  validation(categorySchema.deleteCategory),
+  asyncHandler(categoryController.deleteCategory)
+);
+
+router.get("/", asyncHandler(categoryController.allCategory));
 export default router;

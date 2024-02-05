@@ -28,3 +28,82 @@ export const addCategory = async (req, res, next) => {
     .status(StatusCodes.CREATED)
     .json({ success: true, message: "Category add successfully  " });
 };
+
+export const updateCategory = async (req, res, next) => {
+  const { id } = req.params;
+
+  const category = await Category.findById({ _id: id });
+
+  if (!category) {
+    return next(
+      new Error("category not found", { cause: StatusCodes.NOT_FOUND })
+    );
+  }
+
+  if (req.user._id.toString() !== category.createBy.toString()) {
+    return next(
+      new Error("Unauthorized: You are not the owner of this category.", {
+        cause: StatusCodes.UNAUTHORIZED,
+      })
+    );
+  }
+
+  // upload file to cloudinary
+  if (req.file) {
+    const { public_id, secure_url } = await cloudinary.uploader.upload(
+      req.file.path,
+      { public_id: category.img.id }
+    );
+    category.img = { id: public_id, url: secure_url };
+  }
+
+  // update
+
+  category.name = req.body.name ? req.body.name : category.name;
+  category.slug = req.body.name ? slugify(req.body.name) : category.slug;
+
+  await category.save();
+
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    message: "category updated successfully",
+    data: categoryUpdate,
+  });
+};
+
+export const deleteCategory = async (req, res, next) => {
+  const { id } = req.params;
+  const userId = req.user._id;
+
+  const category = await Category.findById({ _id: id });
+
+  if (!category) {
+    return next(
+      new Error("category not found", { cause: StatusCodes.NOT_FOUND })
+    );
+  }
+
+  if (userId.toString() !== category.createBy.toString()) {
+    return next(
+      new Error("Unauthorized: You are not the owner of this category.", {
+        cause: StatusCodes.UNAUTHORIZED,
+      })
+    );
+  }
+
+  const data = await Category.findByIdAndDelete({
+    _id: id,
+  });
+
+  await cloudinary.uploader.destroy(category.img.id);
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    message: "job deleted successfully",
+    data: data,
+  });
+};
+
+export const allCategory = async (req, res, next) => {
+  const all = await Category.find();
+  return res.status(StatusCodes.OK).json({ success: true, data: all });
+};
