@@ -7,9 +7,10 @@ import { asyncHandler } from "../../utils/asyncHandler.js";
 import { isAuthorized } from "../../middleware/authorization.middleware.js";
 import { isAuth } from "../../middleware/auth.middleware.js";
 import { multerUploadCloud } from "../../utils/multerUploadCloud.js";
-
+import subcategoryRouter from "../subCategory/subCategory.router.js";
 const router = Router();
 
+router.use("/:category/subCategory", subcategoryRouter);
 router.post(
   "/",
   isAuth,
