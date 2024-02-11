@@ -12,7 +12,7 @@ const router = Router();
 
 router.post(
   "/",
-  isAuth(),
+  isAuth,
   isAuthorized("admin"),
   multerUploadCloud().single("brand"),
   validation(brandSchema.addBrand),
