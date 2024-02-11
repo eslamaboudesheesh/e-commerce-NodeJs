@@ -14,8 +14,8 @@ router.post(
   "/",
   isAuth,
   isAuthorized("seller"),
-  validation(couponSchema.addBrand),
-  asyncHandler(couponController.addBrand)
+  validation(couponSchema.addCoupon),
+  asyncHandler(couponController.addCoupon)
 );
 
 router.patch(
