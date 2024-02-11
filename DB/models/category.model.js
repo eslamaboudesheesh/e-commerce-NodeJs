@@ -13,8 +13,14 @@ const categorySchema = new Schema(
       id: { type: String, required: true },
     },
     createBy: { type: Types.ObjectId, ref: "User", required: true },
+    brands: [{ type: Types.ObjectId, ref: "Brand", required: true }],
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
+categorySchema.virtual("subcategory", {
+  ref: "SubCategory",
+  localField: "_id", //category
+  foreignField: "category", //subcategory
+});
 export const Category = model("Category", categorySchema);

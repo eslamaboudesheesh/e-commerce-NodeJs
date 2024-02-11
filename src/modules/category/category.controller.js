@@ -104,6 +104,6 @@ export const deleteCategory = async (req, res, next) => {
 };
 
 export const allCategory = async (req, res, next) => {
-  const all = await Category.find();
+  const all = await Category.find().populate("subcategory");
   return res.status(StatusCodes.OK).json({ success: true, data: all });
 };

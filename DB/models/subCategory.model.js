@@ -14,6 +14,7 @@ const SubCategorySchema = new Schema(
     },
     createBy: { type: Types.ObjectId, ref: "User", required: true },
     category: { type: Types.ObjectId, ref: "Category", required: true },
+    brands: [{ type: Types.ObjectId, ref: "Brand", required: true }],
   },
   { timestamps: true }
 );

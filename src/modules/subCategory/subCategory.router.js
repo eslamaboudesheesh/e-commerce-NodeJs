@@ -1,8 +1,8 @@
 import { Router } from "express";
 
 import { validation } from "../../middleware/validation.middleware.js";
-import * as subCategoryController from "./category.controller.js ";
-import * as subCategorySchema from "./category.schema.js";
+import * as subCategoryController from "./subCategory.controller.js ";
+import * as subCategorySchema from "./subCategory.schema.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { isAuthorized } from "../../middleware/authorization.middleware.js";
 import { isAuth } from "../../middleware/auth.middleware.js";

@@ -133,18 +133,21 @@ export const deleteSubCategory = async (req, res, next) => {
 export const allSubCategory = async (req, res, next) => {
   const { category } = req.params;
 
-  const categoryData = await Category.findById({ _id: category });
+  if (category) {
+    const categoryData = await Category.findById({ _id: category });
 
-  if (!categoryData) {
-    return next(
-      new Error("category not found", { cause: StatusCodes.NOT_FOUND })
-    );
+    if (!categoryData) {
+      return next(
+        new Error("category not found", { cause: StatusCodes.NOT_FOUND })
+      );
+    }
   }
-
   if (category) {
     const all = await SubCategory.find({ category: category });
     return res.status(StatusCodes.OK).json({ success: true, data: all });
   }
-  const all = await SubCategory.find();
+  const all = await SubCategory.find().populate([
+    { path: "category", populate: [{ path: "createBy", select: "email" }] },
+  ]);
   return res.status(StatusCodes.OK).json({ success: true, data: all });
 };
