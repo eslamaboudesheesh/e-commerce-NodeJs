@@ -22,27 +22,23 @@ export const addCoupon = async (req, res, next) => {
     .json({ success: true, message: "coupon add successfully  " });
 };
 
-export const updateBrand = async (req, res, next) => {
-  const { id } = req.params;
+export const updateCoupon = async (req, res, next) => {
+  const { code } = req.params;
 
-  const brandData = await Brand.findById({ _id: id });
+  const coupon = await Coupon.findOne({
+    name: code,
+    expiredAt: { $gt: Date.now() },
+  });
 
-  if (!brandData) {
-    return next(new Error("brand not found", { cause: StatusCodes.NOT_FOUND }));
-  }
-
-  // upload file to cloudinary
-  if (req.file) {
-    const { public_id, secure_url } = await cloudinary.uploader.upload(
-      req.file.path,
-      { public_id: brandData.img.id }
-    );
-    brandData.img = { id: public_id, url: secure_url };
-  }
-
-  if (req.user._id.toString() !== brandData.createBy.toString()) {
+  if (!coupon) {
     return next(
-      new Error("Unauthorized: You are not the owner of this brand.", {
+      new Error("coupon not found", { cause: StatusCodes.NOT_FOUND })
+    );
+  }
+
+  if (req.user.id !== coupon.createdBy.toString()) {
+    return next(
+      new Error("Unauthorized: You are not the owner of this coupon.", {
         cause: StatusCodes.UNAUTHORIZED,
       })
     );
@@ -50,51 +46,52 @@ export const updateBrand = async (req, res, next) => {
 
   // update
 
-  brandData.name = req.body.name ? req.body.name : brandData.name;
-  brandData.slug = req.body.name ? slugify(req.body.name) : brandData.slug;
+  coupon.discount = req.body.discount ? req.body.discount : coupon.discount;
+  coupon.expiredAt = req.body.expiredAt
+    ? new Date(req.body.expiredAt).getTime()
+    : coupon.expiredAt;
 
-  await brandData.save();
+  await coupon.save();
 
   return res.status(StatusCodes.OK).json({
     success: true,
-    message: "brand updated successfully",
-    data: categoryUpdate,
+    message: "coupon updated successfully",
+    data: coupon,
   });
 };
 
-export const deleteBrand = async (req, res, next) => {
-  const { id } = req.params;
-  const userId = req.user._id;
+export const deleteCoupon = async (req, res, next) => {
+  const { code } = req.params;
+  const userId = req.user.id;
 
-  const brand = await Brand.findById({ _id: id });
+  const coupon = await Coupon.findOne({ name: code });
 
-  if (!brand) {
-    return next(new Error("brand not found", { cause: StatusCodes.NOT_FOUND }));
+  if (!coupon) {
+    return next(
+      new Error("coupon not found", { cause: StatusCodes.NOT_FOUND })
+    );
   }
 
-  if (userId.toString() !== brand.createBy.toString()) {
+  if (userId.toString() !== coupon.createdBy.toString()) {
     return next(
-      new Error("Unauthorized: You are not the owner of this brand.", {
+      new Error("Unauthorized: You are not the owner of this coupon.", {
         cause: StatusCodes.UNAUTHORIZED,
       })
     );
   }
-  const data = await Brand.findByIdAndDelete({
-    _id: id,
-  });
-
-  await cloudinary.uploader.destroy(brand.img.id);
-
-  await Category.updateMany({}, { $pull: { brands: id } });
+  await coupon.deleteOne();
 
   return res.status(StatusCodes.OK).json({
     success: true,
-    message: "brand deleted successfully",
-    data: data,
+    message: "coupon deleted successfully",
   });
 };
 
-export const allBrand = async (req, res, next) => {
-  const all = await Brand.find();
+export const allCoupon = async (req, res, next) => {
+  if (req.user.role === "admin") {
+    const all = await Coupon.find();
+    return res.status(StatusCodes.OK).json({ success: true, data: all });
+  }
+  const all = await Coupon.find({ createdBy: req.user._id });
   return res.status(StatusCodes.OK).json({ success: true, data: all });
 };

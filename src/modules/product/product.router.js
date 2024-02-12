@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { validation } from "../../middleware/validation.middleware.js";
 import * as couponController from "./coupon.controller.js ";
-import * as couponSchema from "./coupon.schema.js";
+import * as couponSchema from "./product.schema.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { isAuthorized } from "../../middleware/authorization.middleware.js";
 import { isAuth } from "../../middleware/auth.middleware.js";
@@ -14,8 +14,18 @@ router.post(
   "/",
   isAuth,
   isAuthorized("seller"),
-  validation(couponSchema.addCoupon),
-  asyncHandler(couponController.addCoupon)
+  multerUploadCloud().fields([
+    {
+      name: "defaultImage",
+      maxCount: 1,
+    },
+    {
+      name: "subImages",
+      maxCount: 3,
+    },
+  ]),
+  validation(couponSchema.addProduct),
+  asyncHandler(couponController.addProduct)
 );
 
 router.patch(
@@ -26,11 +36,11 @@ router.patch(
   asyncHandler(couponController.updateCoupon)
 );
 router.delete(
-  "/:code",
+  "/:id",
   isAuth,
   isAuthorized("seller"),
-  validation(couponSchema.deleteCoupon),
-  asyncHandler(couponController.deleteCoupon)
+  validation(couponSchema.deleteProduct),
+  asyncHandler(couponController.deleteProduct)
 );
 
 router.get(

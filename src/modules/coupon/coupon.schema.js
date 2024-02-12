@@ -14,15 +14,21 @@ export const addCoupon = joi
   })
   .required();
 
-export const updateBrandSchema = joi
+export const updateCouponSchema = joi
   .object({
-    id: joi.string().custom(isObjectID).required(),
-    nam: joi.string().min(2).max(12),
+    code: joi.string().length(5).required(),
+    discount: joi
+      .number()
+      .integer()
+      .options({ convert: false }) // number only
+      .min(1)
+      .max(100),
+    expiredAt: joi.date().greater(Date.now()),
   })
   .required();
 
-export const deleteBrand = joi
+export const deleteCoupon = joi
   .object({
-    id: joi.string().custom(isObjectID).required(),
+    code: joi.string().length(5).required(),
   })
   .required();

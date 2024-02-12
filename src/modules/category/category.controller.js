@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import cloudinary from "../../utils/cloud.js";
 import { Category } from "../../../DB/models/category.model.js";
 import slugify from "slugify";
+import { SubCategory } from "../../../DB/models/subCategory.model.js";
 
 export const addCategory = async (req, res, next) => {
   // name slug create by image
@@ -91,9 +92,7 @@ export const deleteCategory = async (req, res, next) => {
     );
   }
 
-  const data = await Category.findByIdAndDelete({
-    _id: id,
-  });
+  await category.deleteOne();
 
   await cloudinary.uploader.destroy(category.img.id);
   return res.status(StatusCodes.OK).json({
