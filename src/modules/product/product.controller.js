@@ -5,6 +5,8 @@ import { Coupon } from "../../../DB/models/coupon.model.js";
 import { nanoid } from "nanoid";
 import { Product } from "../../../DB/models/product.model.js";
 import cloudinary from "../../utils/cloud.js";
+import { StatusCodes } from "http-status-codes";
+import { SubCategory } from "../../../DB/models/subCategory.model.js";
 
 export const addProduct = async (req, res, next) => {
   //check category
@@ -141,11 +143,48 @@ export const deleteProduct = async (req, res, next) => {
   });
 };
 
-export const allCoupon = async (req, res, next) => {
-  if (req.user.role === "admin") {
-    const all = await Coupon.find();
-    return res.status(StatusCodes.OK).json({ success: true, data: all });
+export const allProduct = async (req, res, next) => {
+  //search
+  const { page, sort, keyword, category, brand, subCategory } = req.query;
+
+  if (category && !(await Category.findById(category))) {
+    return next(
+      new Error("category not found", { cause: StatusCodes.NOT_FOUND })
+    );
   }
-  const all = await Coupon.find({ createdBy: req.user._id });
-  return res.status(StatusCodes.OK).json({ success: true, data: all });
+
+  if (subCategory && !(await SubCategory.findById(category))) {
+    return next(
+      new Error("category not found", { cause: StatusCodes.NOT_FOUND })
+    );
+  }
+
+  if (brand && !(await Brand.findById(category))) {
+    return next(
+      new Error("category not found", { cause: StatusCodes.NOT_FOUND })
+    );
+  }
+  //filter
+  //sort
+  //pagination
+
+  // const result = await Product.find({
+  //   name: { $regex: keyword, $option: "i" },
+  // });
+
+  // const result = await Product.find({
+  //   ...req.query,
+  // }).sort();
+
+  // pagination >> skip() limit( )
+  // page = page < 1 || isNaN(page) || !page ? 1 : page;
+  // const limit = 1;
+  // const skip = limit * (page - 1);
+  // const result = await Product.find({}).skip(skip).limit(limit);
+
+  const result = await Product.find({ ...req.query })
+    .sort(sort)
+    .paginate(page)
+    .search(keyword);
+  return res.status(StatusCodes.OK).json({ success: true, data: result });
 };

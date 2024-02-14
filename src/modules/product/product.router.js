@@ -43,11 +43,6 @@ router.delete(
   asyncHandler(couponController.deleteProduct)
 );
 
-router.get(
-  "/",
-  isAuth,
-  isAuthorized("seller", "admin"),
-  asyncHandler(couponController.allCoupon)
-);
+router.get("/", asyncHandler(couponController.allProduct));
 
 export default router;

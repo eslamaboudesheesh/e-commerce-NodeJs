@@ -32,7 +32,12 @@ const productSchema = new Schema(
 
     cloudFolder: { type: String, require: true, unique: true },
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  {
+    timestamps: true,
+    strictQuery: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 productSchema.virtual("finalPrice").get(function () {
@@ -40,5 +45,19 @@ productSchema.virtual("finalPrice").get(function () {
     this.price - (this.price * this.discount || 0) / 100
   ).toFixed(2);
 });
-
+// query helper
+productSchema.query.paginate = function (page) {
+  page = page < 1 || isNaN(page) || !page ? 1 : page;
+  const limit = 1;
+  const skip = limit * (page - 1);
+  return this.skip(skip).limit(limit);
+};
+// query helper search
+productSchema.query.search = function (keyword) {
+  if (keyword) {
+    return this.find({
+      name: { $regex: keyword, $option: "i" },
+    });
+  }
+};
 export const Product = model("Product", productSchema);

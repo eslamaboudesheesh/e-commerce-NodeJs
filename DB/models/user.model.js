@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import bcryptjs from "bcryptjs";
 
 const userSchema = new Schema(
   {
@@ -31,5 +32,14 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
+
+userSchema.pre("save", { document: true, query: false }, function () {
+  if (this.isModified("password")) {
+    this.password = bcryptjs.hashSync(
+      this.password,
+      parseInt(process.env.SALT_ROUND)
+    );
+  }
+});
 
 export const User = model("User", userSchema);

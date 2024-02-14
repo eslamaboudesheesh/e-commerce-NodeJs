@@ -7,6 +7,7 @@ import { User } from "../../../DB/models/user.model.js";
 import sendEmail from "../../utils/sendEmail.js";
 import { signUpTemp } from "../../utils/htmlTempletes.js";
 import { Token } from "../../../DB/models/toke.model.js";
+import { Cart } from "../../../DB/models/cart.model.js";
 
 export const register = async (req, res, next) => {
   const { userName, email, password } = req.body;
@@ -16,14 +17,11 @@ export const register = async (req, res, next) => {
       new Error("user already exist", { cause: StatusCodes.CONFLICT })
     );
   // hash password  8 or 10 to bes secure and good performance
-  const hashPassword = bcryptjs.hashSync(password, process.env.SALT_ROUND);
 
   // generate token
   const token = jwt.sign({ email }, process.env.TOKEN_SECRET);
   const user = await User.create({
-    userName,
-    email,
-    password: hashPassword,
+    ...req.body,
   });
   // confirmation link
   const confirmLink = `http://localhost:3000/auth/activate_account/${token}`;
@@ -55,7 +53,7 @@ export const activateAccount = async (req, res, next) => {
   if (!userExist)
     return next(new Error("user Not exist", { cause: StatusCodes.NOT_FOUND }));
   // create a cart //TODO
-
+  await Cart.create({ user: userExist._id });
   return res
     .status(StatusCodes.ACCEPTED)
     .json({ success: true, message: "try to login  " });
@@ -137,7 +135,6 @@ export const resetPassWord = async (req, res, next) => {
   }
   await User.findOneAndUpdate({ email: email }, { $unset: { forgetCode: 1 } });
 
-  user.password = bcryptjs.hashSync(password, process.env.SALT_ROUND);
   await user.save();
 
   const tokens = await Token.find({ user: user._id });
