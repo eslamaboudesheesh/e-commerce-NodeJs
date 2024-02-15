@@ -60,4 +60,8 @@ productSchema.query.search = function (keyword) {
     });
   }
 };
+
+productSchema.methods.inStock = function (quantity) {
+  return this.availableItems >= quantity ? true : false;
+};
 export const Product = model("Product", productSchema);

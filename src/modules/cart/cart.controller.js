@@ -38,7 +38,7 @@ export const updateCart = async (req, res, next) => {
   const product = await Product.findById(productId);
   if (!product) return next(new Error("product not found "));
 
-  if (quantity > product.availableItems)
+  if (!product.inStock(quantity))
     return next(
       new Error(`sorry,only ${product.availableItems} items are available  `)
     );
