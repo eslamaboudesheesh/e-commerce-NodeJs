@@ -1,14 +1,14 @@
 import { StatusCodes } from "http-status-codes";
 import cloudinary from "../../utils/cloud.js";
-import { Category } from "../../../DB/models/category.model.js";
-import slugify from "slugify";
-import { SubCategory } from "../../../DB/models/subCategory.model.js";
 import { Cart } from "../../../DB/models/cart.model.js";
 import { Product } from "../../../DB/models/product.model.js";
 import { Coupon } from "../../../DB/models/coupon.model.js";
 import { Order } from "../../../DB/models/order.model.js";
 import createInvoice from "../../utils/pdfInvoice.js";
-
+import path from "path";
+import { fileURLToPath } from "url";
+import sendEmail from "../../utils/sendEmail.js";
+const _dirname = path.dirname(fileURLToPath(import.meta.url));
 export const addCart = async (req, res, next) => {
   const { phone, address, payment, coupon } = req.body;
   // name slug create by image
@@ -78,19 +78,37 @@ export const addCart = async (req, res, next) => {
     paid: order.finalPrice,
     invoice_nr: order._id,
   };
-  createInvoice(invoice, ` ${order._id} invoice.pdf`);
+  const pdfPath = path.join(_dirname, `./../../tempInvoices/${order._id}.pdf`);
+  createInvoice(invoice, pdfPath);
   // upload cloud
+  const { secure_url, public_id } = await cloudinary.uploader.upload(pdfPath, {
+    folder: `${process.env.CLOUD_FOLDER_NAME}/order/invoices`,
+  });
   // add to DB  file  URL ,ID
-
+  order.invoice = { url: secure_url, id: public_id };
+  await order.save();
   // send email to user invoices
+  const isSent = await sendEmail({
+    to: user.email,
+    subject: "invoices details",
+    attachments: [
+      {
+        path: secure_url,
+        contentType: "application/pdf",
+      },
+    ],
+  });
+  if (!isSent) return next(new Error("something went wrong"));
   // update stock
-
+  updateStock(order.products);
   // clear cart
-
+  clearCart(req.use._id);
   //return response
-  return res
-    .status(StatusCodes.CREATED)
-    .json({ success: true, message: "cart add successfully  ", result: cart });
+  return res.status(StatusCodes.CREATED).json({
+    success: true,
+    message: "order add successfully  ",
+    result: order,
+  });
 };
 
 export const updateCart = async (req, res, next) => {
