@@ -9,7 +9,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import sendEmail from "../../utils/sendEmail.js";
 const _dirname = path.dirname(fileURLToPath(import.meta.url));
-export const addCart = async (req, res, next) => {
+
+export const addOrder = async (req, res, next) => {
   const { phone, address, payment, coupon } = req.body;
   // name slug create by image
   //check coupon
@@ -100,7 +101,7 @@ export const addCart = async (req, res, next) => {
   });
   if (!isSent) return next(new Error("something went wrong"));
   // update stock
-  updateStock(order.products);
+  updateStock(order.products, true);
   // clear cart
   clearCart(req.use._id);
   //return response
@@ -111,79 +112,29 @@ export const addCart = async (req, res, next) => {
   });
 };
 
-export const updateCart = async (req, res, next) => {
-  const { productId, quantity } = req.params;
+export const cancelOrder = async (req, res, next) => {
+  const { id } = req.params;
+  // check order
+  const order = await Order.findById(id);
+  if (!order) return next(new Error("order not found "));
 
-  const product = await Product.findById(productId);
-  if (!product) return next(new Error("product not found "));
+  //check status
+  if (
+    order.status === "delivered" ||
+    order.status === "shipped" ||
+    order.status === "canceled"
+  )
+    return next(new Error("order can't canceled "));
+  //cancel order
+  order.status = "canceled";
+  await order.save();
 
-  if (!product.inStock(quantity))
-    return next(
-      new Error(`sorry,only ${product.availableItems} items are available  `)
-    );
-
-  const cart = await Cart.findOneAndUpdate(
-    {
-      user: req.user._id,
-      "products.productId": productId,
-    },
-    { "products.$.quantity": quantity },
-    { new: true }
-  );
-
-  return res.status(StatusCodes.OK).json({
-    success: true,
-    message: "cart updated successfully",
-    data: cart,
-  });
-};
-
-export const removeCart = async (req, res, next) => {
-  const { productId } = req.params;
-
-  const product = await Product.findById(productId);
-  if (!product) return next(new Error("product not found "));
-
-  const cart = await Cart.findOneAndUpdate(
-    {
-      user: req.user._id,
-    },
-    { $pull: { products: { productId } } },
-    { new: true }
-  );
+  // update to stock
+  updateStock(order.products, false);
 
   return res.status(StatusCodes.OK).json({
     success: true,
-    message: "product remove  successfully",
+    message: "order canceled  successfully",
     data: cart,
   });
-};
-
-export const deleteCart = async (req, res, next) => {
-  const cart = await Cart.findOneAndUpdate(
-    {
-      user: req.user._id,
-    },
-    { products: [] },
-    { new: true }
-  );
-
-  return res.status(StatusCodes.OK).json({
-    success: true,
-    message: "all products remove  successfully",
-    data: cart,
-  });
-};
-
-export const userCart = async (req, res, next) => {
-  if (req.user.role == "user") {
-    const all = await Cart.findOne({ user: req.user._id });
-    return res.status(StatusCodes.OK).json({ success: true, data: all });
-  }
-  const { cartId } = req.body;
-  if (req.user.role == "admin" && !cartId)
-    return next(new Error("cart id required "));
-
-  const all = await Cart.findById(cartId);
-  return res.status(StatusCodes.OK).json({ success: true, data: all });
 };

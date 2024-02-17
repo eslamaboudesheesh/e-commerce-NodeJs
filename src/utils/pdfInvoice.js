@@ -42,25 +42,13 @@ function generateCustomerInformation(doc, invoice) {
     .text("Invoice Date:", 50, customerInformationTop + 15)
     .text(formatDate(new Date()), 150, customerInformationTop + 15)
     .text("Balance Due:", 50, customerInformationTop + 30)
-    .text(
-      formatCurrency(invoice.subtotal - invoice.paid),
-      150,
-      customerInformationTop + 30
-    )
+    .text(formatCurrency(invoice.paid), 150, customerInformationTop + 30)
 
     .font("Helvetica-Bold")
     .text(invoice.shipping.name, 300, customerInformationTop)
     .font("Helvetica")
     .text(invoice.shipping.address, 300, customerInformationTop + 15)
-    .text(
-      invoice.shipping.city +
-        ", " +
-        invoice.shipping.state +
-        ", " +
-        invoice.shipping.country,
-      300,
-      customerInformationTop + 30
-    )
+    .text(invoice.shipping.country, 300, customerInformationTop + 30)
     .moveDown();
 
   generateHr(doc, 252);
@@ -75,7 +63,6 @@ function generateInvoiceTable(doc, invoice) {
     doc,
     invoiceTableTop,
     "Item",
-    "Description",
     "Unit Cost",
     "Quantity",
     "Line Total"
@@ -89,11 +76,10 @@ function generateInvoiceTable(doc, invoice) {
     generateTableRow(
       doc,
       position,
-      item.item,
-      item.description,
-      formatCurrency(item.amount / item.quantity),
+      item.name,
+      formatCurrency(item.price),
       item.quantity,
-      formatCurrency(item.amount)
+      formatCurrency(item.totalPrice)
     );
 
     generateHr(doc, position + 20);
@@ -103,7 +89,6 @@ function generateInvoiceTable(doc, invoice) {
   generateTableRow(
     doc,
     subtotalPosition,
-    "",
     "",
     "Subtotal",
     "",
@@ -115,7 +100,6 @@ function generateInvoiceTable(doc, invoice) {
     doc,
     paidToDatePosition,
     "",
-    "",
     "Paid To Date",
     "",
     formatCurrency(invoice.paid)
@@ -126,7 +110,6 @@ function generateInvoiceTable(doc, invoice) {
   generateTableRow(
     doc,
     duePosition,
-    "",
     "",
     "Balance Due",
     "",
@@ -146,19 +129,10 @@ function generateFooter(doc) {
     );
 }
 
-function generateTableRow(
-  doc,
-  y,
-  item,
-  description,
-  unitCost,
-  quantity,
-  lineTotal
-) {
+function generateTableRow(doc, y, item, unitCost, quantity, lineTotal) {
   doc
     .fontSize(10)
     .text(item, 50, y)
-    .text(description, 150, y)
     .text(unitCost, 280, y, { width: 90, align: "right" })
     .text(quantity, 370, y, { width: 90, align: "right" })
     .text(lineTotal, 0, y, { align: "right" });
@@ -169,7 +143,7 @@ function generateHr(doc, y) {
 }
 
 function formatCurrency(cents) {
-  return "$" + (cents / 100).toFixed(2);
+  return "EG" + cents;
 }
 
 function formatDate(date) {

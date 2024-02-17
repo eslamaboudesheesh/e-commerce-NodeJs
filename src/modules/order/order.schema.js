@@ -10,14 +10,7 @@ export const addOrder = joi
   })
   .required();
 
-export const updateCart = joi
-  .object({
-    productId: joi.string().custom(isObjectID).required(),
-    quantity: joi.number().integer().min(1).required(),
-  })
-  .required();
-
-export const removeCart = joi
+export const cancelOrder = joi
   .object({
     productId: joi.string().custom(isObjectID).required(),
   })
