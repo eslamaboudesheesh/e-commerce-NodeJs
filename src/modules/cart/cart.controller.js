@@ -1,8 +1,4 @@
 import { StatusCodes } from "http-status-codes";
-import cloudinary from "../../utils/cloud.js";
-import { Category } from "../../../DB/models/category.model.js";
-import slugify from "slugify";
-import { SubCategory } from "../../../DB/models/subCategory.model.js";
 import { Cart } from "../../../DB/models/cart.model.js";
 import { Product } from "../../../DB/models/product.model.js";
 
@@ -17,6 +13,30 @@ export const addCart = async (req, res, next) => {
     return next(
       new Error(`sorry,only ${product.availableItems} items are available  `)
     );
+  //check product exist
+  const isProductInCart = await Cart.findOne({
+    user: req.user._id,
+    "products.productId": productId,
+  });
+
+  if (isProductInCart) {
+    const currentProduct = isProductInCart.products.find(
+      (pro) => pro.productId.toString() === productId.toString()
+    );
+    //check stock
+
+    if (product.inStock(currentProduct.quantity + quantity)) {
+      currentProduct.quantity = currentProduct.quantity + quantity;
+      await isProductInCart.save();
+      return res.status(StatusCodes.CREATED).json({
+        success: true,
+        message: "product add successfully  ",
+        result: isProductInCart,
+      });
+    } else {
+      return next(new Error("product not available in stock "));
+    }
+  }
   //check quantity
   const cart = await Cart.findOneAndUpdate(
     {

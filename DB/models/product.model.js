@@ -29,7 +29,7 @@ const productSchema = new Schema(
     category: { type: Types.ObjectId, ref: "Category", required: true },
     subCategory: { type: Types.ObjectId, ref: "SubCategory", required: true },
     brand: { type: Types.ObjectId, ref: "Brand", required: true },
-
+    averageRate: { type: Number, min: 1, max: 5 },
     cloudFolder: { type: String, require: true, unique: true },
   },
   {
@@ -44,6 +44,12 @@ productSchema.virtual("finalPrice").get(function () {
   return Number.parseFloat(
     this.price - (this.price * this.discount || 0) / 100
   ).toFixed(2);
+});
+
+productSchema.virtual("review", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "productId",
 });
 // query helper
 productSchema.query.paginate = function (page) {
