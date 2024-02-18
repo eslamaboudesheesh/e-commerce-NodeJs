@@ -24,11 +24,4 @@ router.patch(
   asyncHandler(reviewController.updateReview)
 );
 
-router.get(
-  "/",
-  isAuth,
-  isAuthorized("admin", "user"),
-  validation(cartSchema.userCart),
-  asyncHandler(cartController.userCart)
-);
 export default router;

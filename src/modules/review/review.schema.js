@@ -17,15 +17,3 @@ export const updateReview = joi
     rating: joi.number().min(1).max(5),
   })
   .required();
-
-export const removeCart = joi
-  .object({
-    productId: joi.string().custom(isObjectID).required(),
-  })
-  .required();
-
-export const userCart = joi
-  .object({
-    cartId: joi.string().custom(isObjectID),
-  })
-  .required();

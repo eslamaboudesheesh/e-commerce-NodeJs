@@ -7,7 +7,6 @@ import categoryRouter from "./src/modules/category/category.router.js";
 import subcategoryRouter from "./src/modules/subCategory/subCategory.router.js";
 import brandRouter from "./src/modules/brand/brand.router.js";
 import couponRouter from "./src/modules/coupon/coupon.router.js";
-import createInvoice from "./src/utils/pdfInvoice.js";
 
 dotenv.config();
 
@@ -15,7 +14,6 @@ const app = express();
 const port = process.env.PORT;
 app.use(express.json()); // parsing req.body
 await connectDB();
-createInvoice();
 // user router
 app.use("/auth", authRouter);
 app.use("/category", categoryRouter);
