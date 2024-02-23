@@ -8,6 +8,7 @@ import createInvoice from "../../utils/pdfInvoice.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import sendEmail from "../../utils/sendEmail.js";
+import Stripe from "stripe";
 const _dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const addOrder = async (req, res, next) => {
@@ -105,10 +106,43 @@ export const addOrder = async (req, res, next) => {
   // clear cart
   clearCart(req.use._id);
   //return response
+  if (payment === "visa") {
+    //stripe gateway
+    const stripe = new Stripe(process.env.STRIPE_KEY);
+    //coupon stripe
+
+    let couponExisted;
+    if (order.coupon.name !== undefined) {
+      couponExisted = await stripe.coupons.create({
+        percent_off: order.coupon.discount,
+        duration: "once",
+      });
+    }
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      success_url: process.env.SUCCESS_URL,
+      cancel_url: process.env.CANCEL_URL,
+      line_items: order.products.map((pro) => {
+        return {
+          price_data: {
+            currency: "egp",
+            product_data: {
+              name: pro.name,
+              images: [pro.productId.defaultImage.url],
+            },
+            unit_amount: pro.itemPrice * 100,
+          },
+          quantity: pro.quantity,
+        };
+      }),
+      discounts: couponExisted ? [{ coupon: couponExisted.id }] : [],
+    });
+  }
   return res.status(StatusCodes.CREATED).json({
     success: true,
     message: "order add successfully  ",
-    result: order,
+    result: { url: session.url },
   });
 };
 

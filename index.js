@@ -7,13 +7,32 @@ import categoryRouter from "./src/modules/category/category.router.js";
 import subcategoryRouter from "./src/modules/subCategory/subCategory.router.js";
 import brandRouter from "./src/modules/brand/brand.router.js";
 import couponRouter from "./src/modules/coupon/coupon.router.js";
+import morgan from "morgan";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT;
-app.use(express.json()); // parsing req.body
 await connectDB();
+//cors
+const whiteList = ["http://127.0.0.1:5500"];
+app.use(morgan("combined"));
+app.use(express.json()); // parsing req.body
+app.use((req, res, next) => {
+  if (req.originalUrl.includes("/auth/activate_account")) {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET");
+    return next();
+  }
+  if (!whiteList.includes(req.header("origin"))) {
+    return next(new Error("Blocked By CORS!"));
+  }
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "*");
+  res.setHeader("Access-Control-Allow-Methods", "*");
+  res.setHeader("Access-Control-Private-Network", true);
+  return next();
+});
 // user router
 app.use("/auth", authRouter);
 app.use("/category", categoryRouter);
